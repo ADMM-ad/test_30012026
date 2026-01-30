@@ -10,14 +10,14 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <div class="container mt-5">
+    <div class="container mt-2">
         <div class="row justify-content-center">
             <div class="col-md-8">
                 <div class="card shadow">
                     <div class="card-header bg-warning text-dark">
-                        <h4 class="mb-0">
+                        <h5 class="mb-0">
                             <i class="fas fa-edit"></i> Edit Produk
-                        </h4>
+                        </h5>
                     </div>
                     <div class="card-body">
                         

@@ -12,15 +12,20 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
-    <div class="container mt-5">
-        <div class="row">
-            <div class="col-md-12">
+   <div class="container-fluid mt-2 px-1">
+    <div class="row mx-1">
+        <div class="col-12 px-1">
                 <div class="card shadow">
-                    <div class="card-header bg-primary text-white">
-                        <h4 class="mb-0">
+                    
+                    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
                             <i class="fas fa-box"></i> Data Produk - Bisa Dijual
-                        </h4>
+                        </h5>
+                        <a href="<?= base_url('index.php/produk/tambah'); ?>" class="btn btn-success">
+                            <i class="fas fa-plus"></i> Tambah Produk
+                        </a>
                     </div>
+
                     <div class="card-body">
                         
                         <!-- Flash Message Success -->
@@ -39,18 +44,47 @@
                             </div>
                         <?php endif; ?>
 
-                        <!-- Button Tambah -->
-                        <div class="mb-3">
-                            <a href="<?= base_url('index.php/produk/tambah'); ?>" class="btn btn-success">
-                                <i class="fas fa-plus"></i> Tambah Produk
-                            </a>
-                            
+                        <!-- Form Pencarian dan Filter (Center) -->
+                        <div class="row justify-content-center mb-3">
+                            <div class="col-md-4">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light">
+                                        <i class="fas fa-search"></i>
+                                    </span>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="searchInput" 
+                                           placeholder="Cari nama produk...">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <select class="form-select" id="filterKategori">
+                                    <option value="">Semua Kategori</option>
+                                    <?php 
+                                    // Ambil unique kategori dari data produk
+                                    $kategori_list = [];
+                                    foreach($produk as $p) {
+                                        if(!in_array($p->nama_kategori, $kategori_list)) {
+                                            $kategori_list[] = $p->nama_kategori;
+                                        }
+                                    }
+                                    foreach($kategori_list as $kat): 
+                                    ?>
+                                        <option value="<?= $kat; ?>"><?= $kat; ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="col-md-1">
+                                <button type="button" class="btn btn-secondary w-100" onclick="resetFilter()">
+                                    <i class="fas fa-redo"></i> 
+                                </button>
+                            </div>
                         </div>
 
                         <!-- Tabel Produk -->
                         <div class="table-responsive">
-                            <table class="table table-bordered table-striped table-hover">
-                                <thead class="table-dark">
+                            <table class="table table-bordered  table-hover" id="tableProduk">
+                                <thead>
                                     <tr>
                                         <th width="5%">No</th>
                                         <th width="10%">ID Produk</th>
@@ -67,9 +101,9 @@
                                             <tr>
                                                 <td><?= $no++; ?></td>
                                                 <td><?= $p->id_produk; ?></td>
-                                                <td><?= $p->nama_produk; ?></td>
+                                                <td class="nama-produk"><?= $p->nama_produk; ?></td>
                                                 <td>Rp <?= number_format($p->harga, 0, ',', '.'); ?></td>
-                                                <td><?= $p->nama_kategori; ?></td>
+                                                <td class="kategori"><?= $p->nama_kategori; ?></td>
                                                 <td>
                                                     <span class="badge bg-success">
                                                         <?= $p->nama_status; ?>
@@ -82,7 +116,7 @@
                                                         <i class="fas fa-edit"></i>
                                                     </a>
                                                     <a href="javascript:void(0);" 
-                                                       onclick="confirmDelete(<?= $p->id_produk; ?>)" 
+                                                       onclick="confirmDelete(<?= $p->id_produk; ?>)"
                                                        class="btn btn-danger btn-sm" 
                                                        title="Hapus">
                                                         <i class="fas fa-trash"></i>
@@ -91,7 +125,7 @@
                                             </tr>
                                         <?php endforeach; ?>
                                     <?php else: ?>
-                                        <tr>
+                                        <tr id="emptyRow">
                                             <td colspan="7" class="text-center text-muted">
                                                 <i class="fas fa-inbox fa-3x mb-3"></i>
                                                 <p>Belum ada data produk dengan status "bisa dijual"</p>
@@ -129,6 +163,54 @@
                 }
             });
         }
+
+        // Filter dan Search
+        const searchInput = document.getElementById('searchInput');
+        const filterKategori = document.getElementById('filterKategori');
+        const tableRows = document.querySelectorAll('#tableProduk tbody tr');
+
+        function filterTable() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const selectedKategori = filterKategori.value.toLowerCase();
+
+            let visibleCount = 0;
+
+            tableRows.forEach(row => {
+                // Skip empty row
+                if(row.id === 'emptyRow') return;
+
+                const namaProduk = row.querySelector('.nama-produk')?.textContent.toLowerCase() || '';
+                const kategori = row.querySelector('.kategori')?.textContent.toLowerCase() || '';
+
+                const matchSearch = namaProduk.includes(searchTerm);
+                const matchKategori = selectedKategori === '' || kategori.includes(selectedKategori);
+
+                if (matchSearch && matchKategori) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            // Update nomor urut
+            let nomor = 1;
+            tableRows.forEach(row => {
+                if(row.style.display !== 'none' && row.id !== 'emptyRow') {
+                    row.cells[0].textContent = nomor++;
+                }
+            });
+        }
+
+        function resetFilter() {
+            searchInput.value = '';
+            filterKategori.value = '';
+            filterTable();
+        }
+
+        // Event listeners
+        searchInput.addEventListener('keyup', filterTable);
+        filterKategori.addEventListener('change', filterTable);
     </script>
 </body>
 </html>
